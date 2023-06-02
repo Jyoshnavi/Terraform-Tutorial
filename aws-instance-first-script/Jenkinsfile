@@ -30,13 +30,24 @@ pipeline {
                 }
             }
 
-        stage('Plan') {
+        stage('Terraform initialization') {
             steps {
-                sh 'pwd;cd terraform/aws-instance-first-script ; terraform init -input=false'
-                sh 'pwd;cd terraform/aws-instance-first-script ; terraform workspace new ${environment}'
-                sh 'pwd;cd terraform/aws-instance-first-script ; terraform workspace select ${environment}'
-                sh "pwd;cd terraform/aws-instance-first-script ;terraform plan -input=false -out tfplan "
-                sh 'pwd;cd terraform/aws-instance-first-script ;terraform show -no-color tfplan > tfplan.txt'
+                sh 'terraform init'
+                // sh 'pwd;cd terraform/aws-instance-first-script ; terraform init -input=false'
+                // sh 'pwd;cd terraform/aws-instance-first-script ; terraform workspace new ${environment}'
+                // sh 'pwd;cd terraform/aws-instance-first-script ; terraform workspace select ${environment}'
+                // sh "pwd;cd terraform/aws-instance-first-script ;terraform plan -input=false -out tfplan "
+                // sh 'pwd;cd terraform/aws-instance-first-script ;terraform show -no-color tfplan > tfplan.txt'
+            }
+        }
+        stage('Terraform plan') {
+            steps {
+                sh 'terraform plan -out tfplan'
+            }
+        }
+        stage('Terraform show') {
+            steps {
+                sh 'terraform show tfplan > tfplan.txt'
             }
         }
         stage('Approval') {
@@ -45,7 +56,6 @@ pipeline {
                    equals expected: true, actual: params.autoApprove
                }
            }
-
            steps {
                script {
                     def plan = readFile 'terraform/aws-instance-first-script/tfplan.txt'
